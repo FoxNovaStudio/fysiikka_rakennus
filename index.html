@@ -422,6 +422,9 @@ function nodeAt(x,y,rad){let bi=-1,bd=rad;design.nodes.forEach((n,i)=>{const d=M
 function segDist(px,py,a,b){const dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy;let t=l2?((px-a.x)*dx+(py-a.y)*dy)/l2:0;t=Math.max(0,Math.min(1,t));return Math.hypot(px-(a.x+dx*t),py-(a.y+dy*t))}
 const snap=v=>Math.round(v*2)/2;
 const SPLIT=['wood','steel','rail'];
+function findBeam(p){let best=null,bd=0.3;design.beams.forEach((b,i)=>{if(!SPLIT.includes(b.type))return;const A=design.nodes[b.a],B=design.nodes[b.b],dx=B.x-A.x,dy=B.y-A.y,l2=dx*dx+dy*dy;if(!l2)return;
+ let t=((p.x-A.x)*dx+(p.y-A.y)*dy)/l2;t=Math.max(0,Math.min(1,t));const x=A.x+dx*t,y=A.y+dy*t,d=Math.hypot(p.x-x,p.y-y);if(d<bd){bd=d;best={bi:i,x,y}}});return best}
+function insertOnBeam(bi,x,y){const b=design.beams[bi];design.nodes.push({x,y,wheel:0});const n=design.nodes.length-1;design.beams.splice(bi,1,{a:b.a,b:n,type:b.type},{a:n,b:b.b,type:b.type});return n}
 const isBeamTool=t=>MAT[t]!==undefined;
 
 function clickBuild(p){
@@ -437,11 +440,13 @@ function clickBuild(p){
  // beam tools
  let ni=nodeAt(p.x,p.y,0.5);
  if(S.start===null){
-  if(ni<0){const x=snap(p.x),y=snap(p.y);if(!canPlace(x,y)){toast('Tähän ei voi rakentaa');return}pushHist();design.nodes.push({x,y,wheel:0});ni=design.nodes.length-1}
+  if(ni<0){const f=findBeam(p);if(f){pushHist();S.start=insertOnBeam(f.bi,f.x,f.y);refreshHUD();return}
+   const x=snap(p.x),y=snap(p.y);if(!canPlace(x,y)){toast('Tähän ei voi rakentaa');return}pushHist();design.nodes.push({x,y,wheel:0});ni=design.nodes.length-1}
   S.start=ni;return}
  if(ni===S.start){S.start=null;cleanup();return}
  const A=design.nodes[S.start];
- let x,y;if(ni>=0){x=design.nodes[ni].x;y=design.nodes[ni].y}else{x=snap(p.x);y=snap(p.y);if(!canPlace(x,y)){toast('Tähän ei voi rakentaa');return}}
+ let x,y,f=null;if(ni<0)f=findBeam(p);
+ if(ni>=0){x=design.nodes[ni].x;y=design.nodes[ni].y}else if(f){x=f.x;y=f.y}else{x=snap(p.x);y=snap(p.y);if(!canPlace(x,y)){toast('Tähän ei voi rakentaa');return}}
  const L=Math.hypot(x-A.x,y-A.y);
  const split=SPLIT.includes(tool),maxTotal=split?32:MAXLEN[tool];
  if(L>maxTotal+1e-6){toast('Liian pitkä: enintään '+maxTotal+' m');return}
@@ -451,10 +456,13 @@ function clickBuild(p){
  if(n>1&&L/n<0.4)return;
  // intermediate points, reuse nearby existing nodes
  const pts=[];
+ const fSplit=f;
  for(let i=1;i<n;i++){const px=A.x+(x-A.x)*i/n,py=A.y+(y-A.y)*i/n;const ex=nodeAt(px,py,0.3);
   if(ex>=0&&ex!==S.start&&ex!==ni){pts.push({idx:ex})}else{if(!canPlace(px,py)){toast('Palkki osuu maastoon');return}pts.push({x:px,y:py})}}
  pushHist();
- const chain=[S.start];
+ let startIdx=S.start;
+ if(fSplit){ni=insertOnBeam(fSplit.bi,fSplit.x,fSplit.y)}
+ const chain=[startIdx];
  for(const p of pts){if(p.idx!==undefined)chain.push(p.idx);else{design.nodes.push({x:p.x,y:p.y,wheel:0});chain.push(design.nodes.length-1)}}
  if(ni<0){design.nodes.push({x,y,wheel:0});ni=design.nodes.length-1}
  chain.push(ni);
@@ -565,8 +573,8 @@ function frame(now){
  else if(S.mode==='build'){
   // ghost & preview
   const h=S.hover;ghost.visible=false;prevBeam.visible=false;$('readout').hidden=true;
-  if(h&&$('intro').hidden){let ni=nodeAt(h.x,h.y,0.5);let gx=ni>=0?design.nodes[ni].x:snap(h.x),gy=ni>=0?design.nodes[ni].y:snap(h.y);
-   const ok=ni>=0||canPlace(gx,gy)||S.tool==='erase';ghost.position.set(gx,gy,0.2);ghost.visible=S.tool!=='erase';ghost.material.color.set(ok?0xf2b705:0xd6402f);
+  if(h&&$('intro').hidden){let ni=nodeAt(h.x,h.y,0.5);const fb=(ni<0&&isBeamTool(S.tool)&&SPLIT.includes(S.tool))?findBeam(h):null;let gx=ni>=0?design.nodes[ni].x:fb?fb.x:snap(h.x),gy=ni>=0?design.nodes[ni].y:fb?fb.y:snap(h.y);
+   const ok=ni>=0||!!fb||canPlace(gx,gy)||S.tool==='erase';ghost.position.set(gx,gy,0.2);ghost.visible=S.tool!=='erase';ghost.material.color.set(ok?0xf2b705:0xd6402f);
    if(S.start!==null&&isBeamTool(S.tool)){const A=design.nodes[S.start],L=Math.hypot(gx-A.x,gy-A.y),sp=SPLIT.includes(S.tool),mt=sp?32:MAXLEN[S.tool],good=ok&&L<=mt+1e-6&&L>=0.4;
     prevBeam.visible=true;prevBeam.position.set((A.x+gx)/2,(A.y+gy)/2,0.2);prevBeam.rotation.z=Math.atan2(gy-A.y,gx-A.x);prevBeam.scale.x=Math.max(L,0.01);prevBeam.material.color.set(good?0xf2b705:0xd6402f);
     $('readout').hidden=false;const segs=sp?Math.max(1,Math.ceil(L/MAXLEN[S.tool]-1e-9)):1;$('readout').textContent='Pituus '+L.toFixed(1)+' m'+(segs>1?' ('+segs+' palkkia)':'')+'  ·  '+Math.round(L*MAT[S.tool].cost)+' €'}}
