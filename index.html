@@ -105,13 +105,14 @@ function clamp(v,a,b){return v<a?a:v>b?b:v}
 function pointInPoly(x,y,P){let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const xi=P[i][0],yi=P[i][1],xj=P[j][0],yj=P[j][1];if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))c=!c;}return c}
 function designCost(d){let c=0;for(const b of d.beams){const a=d.nodes[b.a],bb=d.nodes[b.b];c+=Math.hypot(a.x-bb.x,a.y-bb.y)*MAT[b.type].cost}for(const n of d.nodes)if(n.wheel)c+=WHEEL_COST[n.wheel];return Math.round(c)}
 
-function collide(c,A,B,rs,e){
+function collide(c,A,B,rs,e,mn){
  const abx=B.x-A.x,aby=B.y-A.y,l2=abx*abx+aby*aby;
  let t=l2>1e-9?((c.x-A.x)*abx+(c.y-A.y)*aby)/l2:0; t=t<0?0:t>1?1:t;
  const qx=A.x+abx*t,qy=A.y+aby*t,dx=c.x-qx,dy=c.y-qy,R=c.r+rs,d2=dx*dx+dy*dy;
  if(d2>=R*R)return;
  let d=Math.sqrt(d2),nx,ny;
  if(d<1e-6){nx=0;ny=1;d=0}else{nx=dx/d;ny=dy/d}
+ if(mn!==undefined&&ny<mn)return;
  const pen=R-d,wA=1-t,wB=t,iC=c.inv,iQ=wA*wA*A.inv+wB*wB*B.inv,tot=iC+iQ;
  if(tot<=0)return;
  const corr=Math.min(pen*0.8,0.004)/tot;
@@ -211,7 +212,8 @@ class Sim{
   for(const b of bs){if(b.fixed)continue;
    for(const s of this.terr){if(b.x+b.r<s.minx||b.x-b.r>s.maxx||b.y+b.r<s.miny||b.y-b.r>s.maxy)continue;collide(b,s.a,s.b,0,0)}}
   for(const l of this.loads){
-   for(const m of this.beams){if(m.broken||m.type==='rope'||m.type==='link'||m.a===l||m.b===l)continue;collide(l,m.a,m.b,0.09,0)}
+   const carried=this.link&&this.link.b===l;
+   if(!carried)for(const m of this.beams){if(m.broken||m.type==='rope'||m.type==='link'||m.a===l||m.b===l)continue;collide(l,m.a,m.b,0.09,0,(l.kind==='ball'&&m.type!=='piston')?0.7:undefined)}
    for(const b of bs){if(b===l||!(b.wheel||b.kind==='hook'))continue;if(this.link&&this.link.a===b&&this.link.b===l)continue;collide(l,b,b,b.r,0)}
   }
  }
@@ -220,12 +222,12 @@ class Sim{
 /*LEVELS*/
 const LEVELS=[
 {title:'Silta',goal:'Vie 600 kg:n kuorma sillan yli',
- brief:'Kallioiden välillä on 12 metrin rotko. Kuorma, 600 kg:n teräspallo, vierii rampilta sillan yli. Rakenna silta, joka ei romahda sen painosta.',
+ brief:'Kallioiden välillä on 12 metrin rotko. Kuorma, 600 kg:n teräspallo, vierii rampilta sillan yli. Pallo vierii vain kannen päällä, joten yläpuoliset tuet eivät estä sitä. Rakenna silta, joka ei romahda sen painosta.',
  hint:'Kolmiot pitävät muotonsa. Jäsenet kantavat vain veto- ja puristusvoimaa, ja pitkä puristettu palkki taipuu helpommin. Käytä terästä eniten rasittuviin kohtiin.',
  terrain:[[-22,-12],[-22,1],[-12,1],[-7,0],[-6,0],[-6,-12],[6,-12],[6,0],[12,0],[13.5,3],[22,3],[22,-12]],
  anchors:[[-6,0],[-6,-2],[-6,-4],[6,0],[6,-2],[6,-4]],
  loads:[{kind:'ball',x:-12.6,y:1.62,r:0.6,m:600,vx:1.0}],
- budget:6000,stars:[0.8,0.6],tools:['wood','steel','erase'],
+ budget:4200,stars:[0.85,0.65],tools:['wood','steel','erase'],
  region:{x0:-8,x1:8,y0:-9,y1:5},cam:{cx:0,cy:0,w:34,h:18},water:-9,limit:25,goalBox:{x0:8.2,x1:13,y0:0,y1:3},
  check(s,dt){const b=s.loads[0];if(b.y<-4)return{fail:'Kuorma putosi rotkoon.'};
   if(s.hold('w',b.x>8.2,dt,1.2))return{win:true};
@@ -237,7 +239,7 @@ const LEVELS=[
  terrain:[[-20,-10],[-20,13],[-3,13],[-3,0],[3,0],[3,8],[20,8],[20,-10]],
  anchors:[[-2,12],[0,12],[2,12]],
  loads:[{kind:'crate',x:0,y:0.95,r:0.45,m:250}],
- budget:4500,stars:[0.8,0.6],tools:['wood','steel','rope','erase'],
+ budget:3000,stars:[0.75,0.55],tools:['wood','steel','rope','erase'],
  region:{x0:-2.9,x1:2.9,y0:0.12,y1:11},cam:{cx:0,cy:6,w:24,h:16},limit:50,goalBox:{x0:-3,x1:20,y0:7.6,y1:12},
  decor:[{x:0,y:12.8,w:8,h:0.5,d:2.5,col:0x6c7782}],
  check(s,dt){const c=s.loads[0];
@@ -251,7 +253,7 @@ const LEVELS=[
  terrain:[[-22,-8],[-22,0],[3,0],[3,2.5],[12,2.5],[12,0],[22,0],[22,-8]],
  anchors:[[-3,0],[-2,0],[-1,0],[1,0],[2,0],[3,0]],
  loads:[{kind:'crate',x:-3.6,y:0.45,r:0.45,m:100}],
- budget:8000,stars:[0.8,0.6],tools:['wood','steel','rope','rail','erase'],crane:true,
+ budget:7000,stars:[0.85,0.65],tools:['wood','steel','rope','rail','erase'],crane:true,
  region:{x0:-9,x1:9,y0:0.12,y1:14},cam:{cx:1,cy:4.5,w:30,h:17},limit:120,goalBox:{x0:3.3,x1:12,y0:2.5,y1:5},
  check(s,dt){const c=s.loads[0];
   if(s.hold('w',c.x>3.6&&c.x<11.8&&c.y>2.75&&Math.hypot(c.vx,c.vy)<0.4,dt,2))return{win:true};
@@ -262,18 +264,18 @@ const LEVELS=[
  hint:'Jousi pyörän ja rungon välissä pehmentää töyssyt. Painopiste matalalle, niin auto ei kaadu mäessä. Kolmiot pitävät rungon jäykkänä.',
  terrain:(()=>{const xs=[-20,-6,0,4,8,12,16,20,24,28,32,36,40,44,48,52,56,60,70],ys=[0,0,0,0,0.6,0.2,1.2,0.3,1.8,0.8,0,1.5,0.4,2.2,1.0,0.3,0,0,0];
   const p=[[-20,-8]];xs.forEach((x,i)=>p.push([x,ys[i]]));p.push([70,-8]);return p})(),
- anchors:[],loads:[],budget:3000,stars:[0.8,0.6],tools:['wood','steel','spring','wheelM','wheelF','erase'],follow:true,
+ anchors:[],loads:[],budget:2400,stars:[0.8,0.55],tools:['wood','steel','spring','wheelM','wheelF','erase'],follow:true,
  region:{x0:-14,x1:-1,y0:0.12,y1:7},cam:{cx:-5,cy:3,w:28,h:14},limit:70,finishX:58,
  check(s,dt){let mx=-1e9;for(const b of s.bodies)if(b.wheel)mx=Math.max(mx,b.x);
   if(mx>58)return{win:true};if(s.t>this.limit)return{fail:'Aika loppui.'};
   return{msg:'Matka maaliin: '+Math.max(0,58-mx).toFixed(0)+' m'}}},
 {title:'Kuljetuskone',goal:'Kuljeta pallo pisteestä A pisteeseen B',
  brief:'Pallo (60 kg) on vasemmalla korokkeella pisteessä A. Vie se oikealla olevaan altaaseen B. Käytettävissä on siltoja, pyöriä, mäntiä, vinsseja ja nosturikisko. Keksi oma koneesi.',
- hint:'Mäntä työntää, kun painat X. Siltaa pitkin pallo vierii, ja nosturilla sen voi nostaa. Ohjaus: ← → ajo ja vaunu, ↑ ↓ vinssi, väli = tartu, X = mäntä.',
+ hint:'Pallon takana seinässä on kiinnityspisteitä: mäntä voi työntää pallon vauhtiin (X). Pallo vierii kantta pitkin ja jatkaa vauhdilla. Siltaa pitkin pallo vierii, ja nosturilla sen voi nostaa. Ohjaus: ← → ajo ja vaunu, ↑ ↓ vinssi, väli = tartu, X = mäntä.',
  terrain:[[-22,-10],[-22,3],[-12.5,3],[-12.5,3.8],[-11.8,3.8],[-11.8,3],[-8,3],[-8,-10],[8,-10],[8,0.5],[14,0.5],[14,2.5],[22,2.5],[22,-10]],
- anchors:[[-9,3],[-8,2],[-8,0],[-8,-2],[8,0.5],[8,-1],[8,-3],[9.5,0.5]],
- loads:[{kind:'ball',x:-10.9,y:3.5,r:0.5,m:60}],
- budget:7000,stars:[0.8,0.6],tools:['wood','steel','rope','spring','piston','rail','wheelM','wheelF','erase'],crane:true,
+ anchors:[[-9,3],[-8,2],[-8,0],[-8,-2],[8,0.5],[8,-1],[8,-3],[9.5,0.5],[-12.4,3.5],[-12.4,4.5],[-12.4,2.5]],
+ loads:[{kind:'ball',x:-10.6,y:3.5,r:0.5,m:60}],
+ budget:3000,stars:[0.7,0.45],tools:['wood','steel','rope','spring','piston','rail','wheelM','wheelF','erase'],crane:true,
  region:{x0:-12,x1:9.5,y0:-9,y1:14},cam:{cx:0,cy:2,w:38,h:20},water:-8,limit:90,goalBox:{x0:9.5,x1:13.5,y0:0.5,y1:3},
  check(s,dt){const b=s.loads[0];if(b.y<-5)return{fail:'Pallo putosi.'};
   if(s.hold('w',b.x>9.4&&b.x<13.7&&b.y<3&&Math.hypot(b.vx,b.vy)<0.5,dt,1.5))return{win:true};
