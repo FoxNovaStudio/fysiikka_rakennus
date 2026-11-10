@@ -213,7 +213,7 @@ class Sim{
    for(const s of this.terr){if(b.x+b.r<s.minx||b.x-b.r>s.maxx||b.y+b.r<s.miny||b.y-b.r>s.maxy)continue;collide(b,s.a,s.b,0,0)}}
   for(const l of this.loads){
    const carried=this.link&&this.link.b===l;
-   if(!carried)for(const m of this.beams){if(m.broken||m.type==='rope'||m.type==='link'||m.a===l||m.b===l)continue;collide(l,m.a,m.b,0.09,0,(l.kind==='ball'&&m.type!=='piston')?0.7:undefined)}
+   if(!carried)for(const m of this.beams){if(m.broken||m.type==='rope'||m.type==='link'||m.a===l||m.b===l)continue;collide(l,m.a,m.b,0.09,0,(l.kind==='ball'&&m.type!=='piston')?0.93:undefined)}
    for(const b of bs){if(b===l||!(b.wheel||b.kind==='hook'))continue;if(this.link&&this.link.a===b&&this.link.b===l)continue;collide(l,b,b,b.r,0)}
   }
  }
@@ -275,7 +275,7 @@ const LEVELS=[
  terrain:[[-22,-10],[-22,3],[-12.5,3],[-12.5,3.8],[-11.8,3.8],[-11.8,3],[-8,3],[-8,-10],[8,-10],[8,0.5],[14,0.5],[14,2.5],[22,2.5],[22,-10]],
  anchors:[[-9,3],[-8,2],[-8,0],[-8,-2],[8,0.5],[8,-1],[8,-3],[9.5,0.5],[-12.4,3.5],[-12.4,4.5],[-12.4,2.5]],
  loads:[{kind:'ball',x:-10.6,y:3.5,r:0.5,m:60}],
- budget:3000,stars:[0.7,0.45],tools:['wood','steel','rope','spring','piston','rail','wheelM','wheelF','erase'],crane:true,
+ budget:4000,stars:[0.8,0.65],tools:['wood','steel','rope','spring','piston','rail','wheelM','wheelF','erase'],crane:true,
  region:{x0:-12,x1:9.5,y0:-9,y1:14},cam:{cx:0,cy:2,w:38,h:20},water:-8,limit:90,goalBox:{x0:9.5,x1:13.5,y0:0.5,y1:3},
  check(s,dt){const b=s.loads[0];if(b.y<-5)return{fail:'Pallo putosi.'};
   if(s.hold('w',b.x>9.4&&b.x<13.7&&b.y<3&&Math.hypot(b.vx,b.vy)<0.5,dt,1.5))return{win:true};
