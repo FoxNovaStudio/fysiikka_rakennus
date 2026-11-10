@@ -246,7 +246,7 @@ const LEVELS=[
   if(s.t>this.limit)return{fail:'Aika loppui.'};
   return{msg:'Kuorman korkeus: '+Math.max(0,c.y-0.45).toFixed(1)+' m'}}},
 {title:'Nosturi',goal:'Siirrä 100 kg:n laatikko korokkeelle',
- brief:'Laatikko on maassa vasemmalla, koroke oikealla 2,5 metrin korkeudessa. Rakenna maahan kiinnitetty torni ja puomi. Merkitse yksi puomin palkki nosturikiskoksi: vaunu ja koukku liikkuvat sitä pitkin.',
+ brief:'Laatikko on maassa vasemmalla, koroke oikealla 2,5 metrin korkeudessa. Rakenna maahan kiinnitetty torni ja puomi. Rakenna puomin yläpalkki nosturikiskosta: vaunu ja koukku liikkuvat sitä pitkin. Kisko voi koostua monesta palkista.',
  hint:'Tornin kannattaa olla leveä, jotta ankkurit eivät revi irti. Ohjaus: ← → vaunu, ↑ ↓ koukku, väli = tartu tai päästä irti.',
  terrain:[[-22,-8],[-22,0],[3,0],[3,2.5],[12,2.5],[12,0],[22,0],[22,-8]],
  anchors:[[-3,0],[-2,0],[-1,0],[1,0],[2,0],[3,0]],
@@ -421,6 +421,7 @@ function canPlace(x,y){const r=level.region;if(x<r.x0-1e-6||x>r.x1+1e-6||y<r.y0-
 function nodeAt(x,y,rad){let bi=-1,bd=rad;design.nodes.forEach((n,i)=>{const d=Math.hypot(n.x-x,n.y-y);if(d<bd){bd=d;bi=i}});return bi}
 function segDist(px,py,a,b){const dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy;let t=l2?((px-a.x)*dx+(py-a.y)*dy)/l2:0;t=Math.max(0,Math.min(1,t));return Math.hypot(px-(a.x+dx*t),py-(a.y+dy*t))}
 const snap=v=>Math.round(v*2)/2;
+const SPLIT=['wood','steel','rail'];
 const isBeamTool=t=>MAT[t]!==undefined;
 
 function clickBuild(p){
@@ -442,12 +443,24 @@ function clickBuild(p){
  const A=design.nodes[S.start];
  let x,y;if(ni>=0){x=design.nodes[ni].x;y=design.nodes[ni].y}else{x=snap(p.x);y=snap(p.y);if(!canPlace(x,y)){toast('Tähän ei voi rakentaa');return}}
  const L=Math.hypot(x-A.x,y-A.y);
- if(L>MAXLEN[tool]+1e-6){toast('Liian pitkä: enintään '+MAXLEN[tool]+' m');return}
+ const split=SPLIT.includes(tool),maxTotal=split?32:MAXLEN[tool];
+ if(L>maxTotal+1e-6){toast('Liian pitkä: enintään '+maxTotal+' m');return}
  if(L<0.4){return}
  if(ni>=0&&design.beams.some(b=>(b.a===S.start&&b.b===ni)||(b.b===S.start&&b.a===ni))){toast('Palkki on jo olemassa');return}
+ const n=split?Math.max(1,Math.ceil(L/MAXLEN[tool]-1e-9)):1;
+ if(n>1&&L/n<0.4)return;
+ // intermediate points, reuse nearby existing nodes
+ const pts=[];
+ for(let i=1;i<n;i++){const px=A.x+(x-A.x)*i/n,py=A.y+(y-A.y)*i/n;const ex=nodeAt(px,py,0.3);
+  if(ex>=0&&ex!==S.start&&ex!==ni){pts.push({idx:ex})}else{if(!canPlace(px,py)){toast('Palkki osuu maastoon');return}pts.push({x:px,y:py})}}
  pushHist();
+ const chain=[S.start];
+ for(const p of pts){if(p.idx!==undefined)chain.push(p.idx);else{design.nodes.push({x:p.x,y:p.y,wheel:0});chain.push(design.nodes.length-1)}}
  if(ni<0){design.nodes.push({x,y,wheel:0});ni=design.nodes.length-1}
- design.beams.push({a:S.start,b:ni,type:tool});S.start=ni;refreshHUD()}
+ chain.push(ni);
+ for(let i=0;i<chain.length-1;i++){const p=chain[i],q=chain[i+1];
+  if(p!==q&&!design.beams.some(b=>(b.a===p&&b.b===q)||(b.a===q&&b.b===p)))design.beams.push({a:p,b:q,type:tool})}
+ S.start=null;cleanup();refreshHUD()}
 
 /* ---------- pointer ---------- */
 const ray=new THREE.Raycaster(),plane=new THREE.Plane(new THREE.Vector3(0,0,1),0),v3=new THREE.Vector3();
@@ -515,7 +528,7 @@ function startTest(again){
  const c=designCost(design);
  if(c>level.budget){toast('Budjetti ylittyy');return}
  if(design.beams.length===0){toast('Rakenna ensin jotain');return}
- if(level.crane&&design.beams.some(b=>b.type==='rail')===false&&S.li===2){toast('Merkitse puomiin nosturikisko');return}
+ if(level.crane&&design.beams.some(b=>b.type==='rail')===false&&S.li===2){toast('Tarvitset nosturikiskon (työkalu Nosturikisko)');return}
  if(S.li===3&&!design.nodes.some(n=>n.wheel===2)){toast('Tarvitset ainakin yhden moottoripyörän');return}
  S.mode='test';S.start=null;S.sim=new Sim(level,clone(design));S.done=false;S.acc=0;$('banner').hidden=true;$('win').hidden=true;
  grid.visible=false;ghost.visible=false;prevBeam.visible=false;sig='';buildActions();$('readout').hidden=false;
@@ -552,16 +565,16 @@ function frame(now){
  else if(S.mode==='build'){
   // ghost & preview
   const h=S.hover;ghost.visible=false;prevBeam.visible=false;$('readout').hidden=true;
-  if(h&&!$('intro').hidden===false){let ni=nodeAt(h.x,h.y,0.5);let gx=ni>=0?design.nodes[ni].x:snap(h.x),gy=ni>=0?design.nodes[ni].y:snap(h.y);
+  if(h&&$('intro').hidden){let ni=nodeAt(h.x,h.y,0.5);let gx=ni>=0?design.nodes[ni].x:snap(h.x),gy=ni>=0?design.nodes[ni].y:snap(h.y);
    const ok=ni>=0||canPlace(gx,gy)||S.tool==='erase';ghost.position.set(gx,gy,0.2);ghost.visible=S.tool!=='erase';ghost.material.color.set(ok?0xf2b705:0xd6402f);
-   if(S.start!==null&&isBeamTool(S.tool)){const A=design.nodes[S.start],L=Math.hypot(gx-A.x,gy-A.y),good=ok&&L<=MAXLEN[S.tool]+1e-6&&L>=0.4;
+   if(S.start!==null&&isBeamTool(S.tool)){const A=design.nodes[S.start],L=Math.hypot(gx-A.x,gy-A.y),sp=SPLIT.includes(S.tool),mt=sp?32:MAXLEN[S.tool],good=ok&&L<=mt+1e-6&&L>=0.4;
     prevBeam.visible=true;prevBeam.position.set((A.x+gx)/2,(A.y+gy)/2,0.2);prevBeam.rotation.z=Math.atan2(gy-A.y,gx-A.x);prevBeam.scale.x=Math.max(L,0.01);prevBeam.material.color.set(good?0xf2b705:0xd6402f);
-    $('readout').hidden=false;$('readout').textContent='Pituus '+L.toFixed(1)+' m  ·  '+Math.round(L*MAT[S.tool].cost)+' €'}}
+    $('readout').hidden=false;const segs=sp?Math.max(1,Math.ceil(L/MAXLEN[S.tool]-1e-9)):1;$('readout').textContent='Pituus '+L.toFixed(1)+' m'+(segs>1?' ('+segs+' palkkia)':'')+'  ·  '+Math.round(L*MAT[S.tool].cost)+' €'}}
   if(S.start!==null){const A=design.nodes[S.start];if(A){ghost.visible=true}}
  }
  placeCam();syncScene();renderer.render(scene,cam);requestAnimationFrame(frame)}
 resize();loadLevel(0);requestAnimationFrame(frame);
-window.__game={S,loadLevel,startTest,stopTest,C,get design(){return design}};
+window.__game={S,loadLevel,startTest,stopTest,C,toScreen(x,y){const v=new THREE.Vector3(x,y,0).project(cam),r=cv.getBoundingClientRect();return{x:r.left+(v.x+1)/2*r.width,y:r.top+(1-v.y)/2*r.height}},get design(){return design}};
 })();
 /*ENDGAME*/
 </script>
