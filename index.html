@@ -25,9 +25,18 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 #goal{flex:1 1 220px;min-width:0;padding:6px 12px;display:flex;flex-direction:column;justify-content:center}
 #goal b{font:700 18px/1.05 var(--f-display);letter-spacing:.03em;text-transform:uppercase}
 #goal span{color:var(--mute);font-size:12.5px}
-#cost{padding:6px 12px;min-width:170px}
+#cost{padding:6px 12px 6px;min-width:200px}
 #cost .n{font:500 13px var(--f-mono);font-variant-numeric:tabular-nums;display:flex;justify-content:space-between;gap:8px}
-#bar{height:6px;background:var(--line);border-radius:3px;margin-top:5px;overflow:hidden}
+#barw{position:relative;margin-top:5px}
+#bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+#barw u{position:absolute;top:-2px;width:2px;height:10px;background:var(--ink);text-decoration:none}
+#t3{background:var(--accent)!important;outline:1px solid var(--ink)}
+#stars{font:500 11px var(--f-mono);color:var(--mute);margin-top:8px;line-height:1.3}
+#helpBtn{width:44px;font:700 20px var(--f-display);color:var(--ink);cursor:pointer;border-radius:6px}
+.card h3{margin:14px 0 4px;font:700 17px var(--f-display);text-transform:uppercase;letter-spacing:.06em}
+.card ul,.card ol{margin:6px 0;padding-left:20px;max-width:64ch;line-height:1.45}
+.card li{margin:4px 0}
+.starinfo{font:500 12px var(--f-mono);color:var(--mute)}
 #bar i{display:block;height:100%;width:0;background:var(--good)}
 #tools{left:max(12px,env(safe-area-inset-left,0px));top:calc(78px + env(safe-area-inset-top,0px));bottom:calc(76px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:4px;padding:6px;overflow-y:auto;max-height:calc(100% - 160px);align-self:flex-start;width:92px}
 .tool{border:1px solid transparent;background:transparent;color:var(--ink);border-radius:5px;padding:6px 3px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font:600 11.5px/1.1 var(--f-body);text-align:center}
@@ -77,7 +86,7 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
  <div class="brand">Engineer</div>
  <div class="panel" id="tabs"></div>
  <div class="panel" id="goal"><b id="gt"></b><span id="gs"></span></div>
- <div class="panel" id="cost"><div class="n"><span>Kustannus</span><span id="cv2"></span></div><div id="bar"><i></i></div></div>
+ <div class="panel" id="cost"><div class="n"><span>Kustannus</span><span id="cv2"></span></div><div id="barw"><div id="bar"><i></i></div><u id="t3"></u><u id="t2"></u></div><div id="stars">—</div></div><button class="panel" id="helpBtn" title="Ohjeet">?</button>
 </div>
 <div class="hud panel" id="tools"></div>
 <div class="hud panel" id="readout" hidden></div>
@@ -85,7 +94,12 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 <div class="hud panel" id="actions"></div>
 <div class="hud panel" id="camera"><button id="cSide">Sivu</button><button id="c3d">3D</button><button id="cFollow">Seuraa</button><button id="cReset">⟲</button><button id="cFull" title="Koko näyttö">⛶</button></div>
 <div class="hud" id="toast"></div>
-<div class="modal" id="intro"><div class="card"><div class="k" id="ik"></div><h2 id="it"></h2><p id="ib"></p><p class="tip" id="ih"></p><div class="row"><button class="btn go" id="istart">Aloita rakentaminen</button></div></div></div>
+<div class="modal" id="intro"><div class="card"><div class="k" id="ik"></div><h2 id="it"></h2><p id="ib"></p><ol id="isteps"></ol><p class="tip" id="ih"></p><p id="istar" class="starinfo"></p><div class="row"><button class="btn go" id="istart">Aloita rakentaminen</button><button class="btn" id="iex">Näytä esimerkki</button></div></div></div>
+<div class="modal" id="help" hidden><div class="card"><div class="k">Ohjeet</div><h2>Näin pelaat</h2>
+<h3>Rakentaminen</h3><ul><li>Valitse työkalu vasemmalta. Palkki tehdään kahdella klikkauksella: aloituspiste ja päätepiste. Aloituspisteeksi kelpaa keltainen kiinnityspiste, jo rakennettu solmu, palkin keskikohta tai tyhjä ruutu.</li><li>Pitkä palkki pätkitään automaattisesti enintään 4,5 m palkkeihin. Palkin keskelle voi kiinnittää toisen palkin.</li><li>Kolmio on jäykkä. Nelikulmio taipuu, joten lisää siihen vinopalkki.</li><li>Esc tai oikea hiiren painike peruu aloitetun palkin. Ctrl + Z kumoaa. Poista-työkalu poistaa solmun tai palkin.</li><li>Hiiren oikea painike vetäen kääntää kameraa, rulla zoomaa, keskipainike siirtää näkymää. Painike Sivu palauttaa suoran sivukuvan. F-näppäin avaa koko näytön.</li></ul>
+<h3>Testaus</h3><ul><li>Paina Testaa. Palkki värjäytyy punaiseksi, kun sen jännitys lähestyy rajaa, ja katkeaa 100 %:ssa. Pitkä puristettu palkki katkeaa herkemmin.</li><li>Ohjaus: ← → ajo ja nosturin vaunu, ↑ ↓ vinssi ja koukku, väli = Tartu tai päästä irti, X = Mäntä. Ruudun painikkeet toimivat samoin.</li></ul>
+<h3>Tähdet</h3><ul><li>★ kun läpäiset kentän budjetin sisällä.</li><li>★★ kun rakenne maksaa alle ylemmällä rivillä näkyvän rajan, ★★★ kun se on vielä halvempi. Rajat näkyvät kustannusmittarissa.</li><li>Halvempi rakenne = lujuus oikeisiin paikkoihin. Käytä terästä vain kriittisiin palkkeihin ja karsi turhat.</li></ul>
+<div class="row"><button class="btn go" id="hclose">Selvä</button></div></div></div>
 <div class="modal" id="win" hidden><div class="card"><div class="k">Tehtävä suoritettu</div><h2 id="wt"></h2><div class="stars" id="ws"></div><p id="wp"></p><div class="row"><button class="btn" id="wback">Muokkaa</button><button class="btn go" id="wnext">Seuraava kenttä</button></div></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -222,7 +236,7 @@ class Sim{
 /*ENDSIM*/
 /*LEVELS*/
 const LEVELS=[
-{title:'Silta',goal:'Vie 600 kg:n kuorma sillan yli',
+{title:'Silta',labels:[{"x": -12.6, "y": 3.6, "t": "Kuorma 600 kg"}, {"x": 10.5, "y": 2.6, "t": "Maali"}],steps:["Valitse Teräspalkki. Klikkaa kallion keltaista kiinnityspistettä ja sitten toista pistettä. Jokainen palkki tehdään kahdella klikkauksella.", "Yhdistä vastakkaiset kiinnityspisteet. Kannen (korkeus 0) pitää kulkea koko matka kalliolta toiselle.", "Tee kolmioita. Pelkkä suora palkki taipuu, kolmio pysyy jäykkänä.", "Paina Testaa. Punaiseksi värjäytyvä palkki on liian rasittunut: vaihda se teräkseksi tai lisää sille vierelle toinen.", "Kun silta kestää, kokeile vaihtaa vähän rasittuneet palkit puuksi. Halvempi rakenne antaa enemmän tähtiä."],goal:'Vie 600 kg:n kuorma sillan yli',
  brief:'Kallioiden välillä on 12 metrin rotko. Kuorma, 600 kg:n teräspallo, vierii rampilta sillan yli. Pallo vierii vain kannen päällä, joten yläpuoliset tuet eivät estä sitä. Rakenna silta, joka ei romahda sen painosta.',
  hint:'Kolmiot pitävät muotonsa. Jäsenet kantavat vain veto- ja puristusvoimaa, ja pitkä puristettu palkki taipuu helpommin. Käytä terästä eniten rasittuviin kohtiin.',
  terrain:[[-22,-12],[-22,1],[-12,1],[-7,0],[-6,0],[-6,-12],[6,-12],[6,0],[12,0],[13.5,3],[22,3],[22,-12]],
@@ -234,11 +248,12 @@ const LEVELS=[
   if(s.hold('w',b.x>8.2,dt,1.2))return{win:true};
   if(s.t>this.limit)return{fail:'Kuorma ei päässyt perille.'};
   return{msg:'Kuorma: x = '+b.x.toFixed(1)+' m'}}},
-{title:'Hissi',goal:'Nosta 250 kg:n kuorma 8 metrin korkeuteen',
- brief:'Rakenna hissikoppi, joka mahtuu kuilun seinien väliin. Kuorma putoaa kopin lattialle kohdasta x = 0. Kiinnitä köysi kopin ylänurkkaan ja kiinnitä sen toinen pää katossa olevaan vinssiin.',
+{title:'Hissi',labels:[{"x": 0, "y": 5.2, "t": "Kuorma putoaa tähän"}, {"x": 0, "y": 10.6, "t": "Köysi kiinnitetään ylös keltaiseen pisteeseen"}, {"x": 10, "y": 9.4, "t": "Maali: 8 m"}],steps:["Kopin runko on jo valmiina: lattia (alhaalla, kuorman alla), katto ja pystypalkit. Kuorma ei tartu mihinkään, vaan se lepää lattialla ja vinssi nostaa koko kopin.", "Valitse Köysi. Klikkaa katon keskimmäistä solmua ja sitten keltaista kiinnityspistettä ylhäällä (x = 0, y = 12). Se on vinssi.", "Paina Testaa ja pidä ▲ (nuoli ylös) pohjassa. Laatikon pitää nousta 8 m korkeuteen ja pysyä siellä 2 sekuntia.", "Jos runko taipuu, lisää vinopalkkeja (kolmioita). Tähtiä saat vaihtamalla kopin palkkeja puuksi ja karsimalla turhat, mutta älä heikennä lattiaa liikaa."],goal:'Nosta 250 kg:n kuorma 8 metrin korkeuteen',
+ brief:'Nosta 250 kg:n laatikko 8 metrin korkeuteen. Kopin runko on valmiina. Sinun tehtäväsi on kiinnittää köysi vinssiin ja hioa runko kevyeksi ja halvaksi. Laatikko putoaa lattialle, kun testi alkaa.',
  hint:'Lattian täytyy kulkea kuorman alta (x = 0). Köysi kantaa vain vetoa, joten kiinnitä se kopin ylänurkkiin. Vinssi käynnistyy nuolinäppäin ylös -painikkeella.',
  terrain:[[-20,-10],[-20,13],[-3,13],[-3,0],[3,0],[3,8],[20,8],[20,-10]],
  anchors:[[-2,12],[0,12],[2,12]],
+ starter:{nodes:[[-1.5,0.5],[0,0.5],[1.5,0.5],[-1.5,3],[0,3],[1.5,3]],beams:[[3,4,'steel'],[4,5,'steel'],[6,7,'steel'],[7,8,'steel'],[3,6,'steel'],[4,7,'steel'],[5,8,'steel']]},
  loads:[{kind:'crate',x:0,y:0.95,r:0.45,m:250}],
  budget:3000,stars:[0.75,0.55],tools:['wood','steel','rope','erase'],
  region:{x0:-2.9,x1:2.9,y0:0.12,y1:11},cam:{cx:0,cy:6,w:24,h:16},limit:50,goalBox:{x0:-3,x1:20,y0:7.6,y1:12},
@@ -248,7 +263,7 @@ const LEVELS=[
   if(c.y<0.4&&s.t>3)return{fail:'Kuorma jäi maahan.'};
   if(s.t>this.limit)return{fail:'Aika loppui.'};
   return{msg:'Kuorman korkeus: '+Math.max(0,c.y-0.45).toFixed(1)+' m'}}},
-{title:'Nosturi',goal:'Siirrä 100 kg:n laatikko korokkeelle',
+{title:'Nosturi',labels:[{"x": -3.6, "y": 2.2, "t": "Laatikko"}, {"x": 8, "y": 4.6, "t": "Koroke: vie laatikko tänne"}],steps:["Rakenna kaksi pystypylvästä maan kiinnityspisteistä (x = -1 ja x = 1) noin 9 m korkeuteen. Yhdistä pylväät poikki- ja vinopalkeilla.", "Tee pylväiden päähän puomi vasemmalle ja oikealle Nosturikisko-työkalulla. Kiskopalkit ovat vaunun rata.", "Tue puomien päät vinopalkeilla tornin pylväisiin.", "Testaa: ← → liikuttaa vaunua, ↑ ↓ nostaa ja laskee koukkua. Laske koukku laatikon viereen, paina väli (Tartu), nosta, siirrä korokkeen yläpuolelle, laske ja paina väli uudelleen."],goal:'Siirrä 100 kg:n laatikko korokkeelle',
  brief:'Laatikko on maassa vasemmalla, koroke oikealla 2,5 metrin korkeudessa. Rakenna maahan kiinnitetty torni ja puomi. Rakenna puomin yläpalkki nosturikiskosta: vaunu ja koukku liikkuvat sitä pitkin. Kisko voi koostua monesta palkista.',
  hint:'Tornin kannattaa olla leveä, jotta ankkurit eivät revi irti. Ohjaus: ← → vaunu, ↑ ↓ koukku, väli = tartu tai päästä irti.',
  terrain:[[-22,-8],[-22,0],[3,0],[3,2.5],[12,2.5],[12,0],[22,0],[22,-8]],
@@ -260,7 +275,7 @@ const LEVELS=[
   if(s.hold('w',c.x>3.6&&c.x<11.8&&c.y>2.75&&Math.hypot(c.vx,c.vy)<0.4,dt,2))return{win:true};
   if(s.t>this.limit)return{fail:'Aika loppui.'};
   return{msg:'Laatikko: x = '+c.x.toFixed(1)+' m, y = '+Math.max(0,c.y-0.45).toFixed(1)+' m'}}},
-{title:'Ajoneuvo',goal:'Aja maaliin, 58 metrin päähän',
+{title:'Ajoneuvo',labels:[{"x": -7, "y": 8, "t": "Rakenna ajoneuvo tähän"}, {"x": 58, "y": 8, "t": "Maali"}],steps:["Aseta kaksi Moottoripyörää maahan noin 4 m päähän toisistaan. Rakenna niiden päälle runko palkeista.", "Pidä rungon palkit kolmioina, niin runko pysyy jäykkänä. Jousi pyörän ja rungon välissä pehmentää töyssyt.", "Testaa: pidä ▶ pohjassa tai nuoli oikealle. Jos auto kaatuu mäessä, laske painopistettä tai levennä pyöräväliä."],goal:'Aja maaliin, 58 metrin päähän',
  brief:'Suunnittele ajoneuvo, joka selviää kumpuilevasta maastosta maaliviivalle. Tarvitset ainakin yhden moottoripyörän. Ohjaus: ← → ajo.',
  hint:'Jousi pyörän ja rungon välissä pehmentää töyssyt. Painopiste matalalle, niin auto ei kaadu mäessä. Kolmiot pitävät rungon jäykkänä.',
  terrain:(()=>{const xs=[-20,-6,0,4,8,12,16,20,24,28,32,36,40,44,48,52,56,60,70],ys=[0,0,0,0,0.6,0.2,1.2,0.3,1.8,0.8,0,1.5,0.4,2.2,1.0,0.3,0,0,0];
@@ -270,7 +285,7 @@ const LEVELS=[
  check(s,dt){let mx=-1e9;for(const b of s.bodies)if(b.wheel)mx=Math.max(mx,b.x);
   if(mx>58)return{win:true};if(s.t>this.limit)return{fail:'Aika loppui.'};
   return{msg:'Matka maaliin: '+Math.max(0,58-mx).toFixed(0)+' m'}}},
-{title:'Kuljetuskone',goal:'Kuljeta pallo pisteestä A pisteeseen B',
+{title:'Kuljetuskone',labels:[{"x": -10, "y": 6.2, "t": "A: pallo"}, {"x": 11.5, "y": 4.6, "t": "B: allas"}, {"x": -12.4, "y": 6.2, "t": "Kiinnitys"}],steps:["Pallo on vasemmalla koloon. Kiinnitä Mäntä seinän kiinnityspisteeseen ja aseta sen toinen pää pallon viereen.", "Rakenna silta tasanteen reunasta oikealla olevalle altaalle. Sillan pitää kulkea alaspäin altaaseen ja pallon pitää vierii sen yli.", "Testaa: pidä X (Mäntä) pohjassa. Mäntä työntää pallon vauhtiin ja pallo vierii perille.", "Halutessasi voit keksiä oman koneen, kuten nosturin tai ajoneuvon."],goal:'Kuljeta pallo pisteestä A pisteeseen B',
  brief:'Pallo (60 kg) on vasemmalla korokkeella pisteessä A. Vie se oikealla olevaan altaaseen B. Käytettävissä on siltoja, pyöriä, mäntiä, vinsseja ja nosturikisko. Keksi oma koneesi.',
  hint:'Pallon takana seinässä on kiinnityspisteitä: mäntä voi työntää pallon vauhtiin (X). Pallo vierii kantta pitkin ja jatkaa vauhdilla. Siltaa pitkin pallo vierii, ja nosturilla sen voi nostaa. Ohjaus: ← → ajo ja vaunu, ↑ ↓ vinssi, väli = tartu, X = mäntä.',
  terrain:[[-22,-10],[-22,3],[-12.5,3],[-12.5,3.8],[-11.8,3.8],[-11.8,3],[-8,3],[-8,-10],[8,-10],[8,0.5],[14,0.5],[14,2.5],[22,2.5],[22,-10]],
@@ -284,6 +299,9 @@ const LEVELS=[
   return{msg:'Pallo: x = '+b.x.toFixed(1)+' m'}}}
 ];
 /*ENDLEVELS*/
+/*EXAMPLES*/
+const EXAMPLES={"0":{"nodes":[{"x":-6,"y":0,"fixed":true},{"x":-6,"y":-2,"fixed":true},{"x":-6,"y":-4,"fixed":true},{"x":6,"y":0,"fixed":true},{"x":6,"y":-2,"fixed":true},{"x":6,"y":-4,"fixed":true},{"x":-3,"y":0},{"x":-3,"y":-2},{"x":0,"y":0},{"x":0,"y":-2},{"x":3,"y":0},{"x":3,"y":-2}],"beams":[{"a":0,"b":6,"type":"wood"},{"a":1,"b":7,"type":"wood"},{"a":6,"b":8,"type":"wood"},{"a":7,"b":9,"type":"wood"},{"a":8,"b":10,"type":"wood"},{"a":9,"b":11,"type":"wood"},{"a":10,"b":3,"type":"wood"},{"a":11,"b":4,"type":"wood"},{"a":6,"b":7,"type":"steel"},{"a":8,"b":9,"type":"steel"},{"a":10,"b":11,"type":"steel"},{"a":0,"b":7,"type":"steel"},{"a":6,"b":9,"type":"wood"},{"a":10,"b":9,"type":"wood"},{"a":3,"b":11,"type":"steel"}]},"1":{"nodes":[{"x":-2,"y":12,"fixed":true},{"x":0,"y":12,"fixed":true},{"x":2,"y":12,"fixed":true},{"x":-1.5,"y":0.3},{"x":1.5,"y":0.3},{"x":-1.5,"y":3},{"x":1.5,"y":3},{"x":0,"y":3},{"x":0,"y":0.3}],"beams":[{"a":7,"b":6,"type":"steel"},{"a":4,"b":6,"type":"wood"},{"a":3,"b":6,"type":"steel"},{"a":4,"b":5,"type":"wood"},{"a":8,"b":7,"type":"wood"},{"a":8,"b":5,"type":"wood"},{"a":8,"b":6,"type":"wood"},{"a":1,"b":7,"type":"rope"}]},"2":{"nodes":[{"x":-3,"y":0,"fixed":true},{"x":-2,"y":0,"fixed":true},{"x":-1,"y":0,"fixed":true},{"x":1,"y":0,"fixed":true},{"x":2,"y":0,"fixed":true},{"x":3,"y":0,"fixed":true},{"x":-1,"y":3},{"x":1,"y":3},{"x":-1,"y":6},{"x":1,"y":6},{"x":-1,"y":9},{"x":1,"y":9},{"x":-4,"y":9},{"x":4,"y":9}],"beams":[{"a":2,"b":6,"type":"steel"},{"a":3,"b":7,"type":"steel"},{"a":6,"b":7,"type":"wood"},{"a":2,"b":7,"type":"wood"},{"a":3,"b":6,"type":"wood"},{"a":6,"b":8,"type":"steel"},{"a":7,"b":9,"type":"wood"},{"a":8,"b":9,"type":"wood"},{"a":6,"b":9,"type":"wood"},{"a":7,"b":8,"type":"wood"},{"a":8,"b":10,"type":"wood"},{"a":9,"b":11,"type":"wood"},{"a":10,"b":11,"type":"rail"},{"a":8,"b":11,"type":"steel"},{"a":9,"b":10,"type":"wood"},{"a":12,"b":10,"type":"rail"},{"a":13,"b":11,"type":"rail"},{"a":12,"b":8,"type":"steel"},{"a":13,"b":9,"type":"wood"}]},"3":{"nodes":[{"x":-10,"y":0.55,"wheel":2},{"x":-6,"y":0.55,"wheel":2},{"x":-9,"y":2},{"x":-7,"y":2}],"beams":[{"a":0,"b":1,"type":"wood"},{"a":0,"b":2,"type":"wood"},{"a":2,"b":3,"type":"wood"},{"a":3,"b":1,"type":"wood"},{"a":0,"b":3,"type":"wood"},{"a":1,"b":2,"type":"wood"}]},"4":{"nodes":[{"x":-9,"y":3,"fixed":true},{"x":-8,"y":2,"fixed":true},{"x":-8,"y":0,"fixed":true},{"x":-8,"y":-2,"fixed":true},{"x":8,"y":0.5,"fixed":true},{"x":8,"y":-1,"fixed":true},{"x":8,"y":-3,"fixed":true},{"x":9.5,"y":0.5,"fixed":true},{"x":-12.4,"y":3.5,"fixed":true},{"x":-12.4,"y":4.5,"fixed":true},{"x":-12.4,"y":2.5,"fixed":true},{"x":-4.75,"y":2.375},{"x":-0.5,"y":1.75},{"x":3.75,"y":1.125},{"x":-4.75,"y":0.375},{"x":-0.5,"y":-0.25},{"x":3.75,"y":-0.875},{"x":-11.2,"y":3.2}],"beams":[{"a":0,"b":11,"type":"steel"},{"a":11,"b":12,"type":"wood"},{"a":12,"b":13,"type":"wood"},{"a":13,"b":4,"type":"wood"},{"a":2,"b":14,"type":"wood"},{"a":14,"b":15,"type":"wood"},{"a":16,"b":5,"type":"wood"},{"a":12,"b":15,"type":"wood"},{"a":2,"b":11,"type":"steel"},{"a":11,"b":15,"type":"wood"},{"a":8,"b":17,"type":"piston"}]}};
+/*ENDEXAMPLES*/
 /*GAME*/
 (function(){
 const $=id=>document.getElementById(id);
@@ -317,6 +335,10 @@ addEventListener('resize',()=>{resize();if(S.mode==='build')fitCam()});
 let terrainTop=[];
 function topAt(x){let best=null;const P=level.terrain;for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];if((a[0]<=x&&b[0]>=x)||(b[0]<=x&&a[0]>=x)){if(a[0]===b[0])continue;const y=a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0]);if(best===null||y>best)best=y}}return best}
 function rng(seed){return()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646}}
+let labelGrp=null;
+function mkLabel(lb){const c=document.createElement('canvas');const ctx=c.getContext('2d');ctx.font='600 40px Barlow,Arial,sans-serif';const w=Math.ceil(ctx.measureText(lb.t).width)+40;c.width=w;c.height=72;
+ ctx.font='600 40px Barlow,Arial,sans-serif';ctx.fillStyle='rgba(20,35,46,0.88)';ctx.beginPath();ctx.roundRect?ctx.roundRect(0,4,w,64,12):ctx.rect(0,4,w,64);ctx.fill();ctx.fillStyle='#f2b705';ctx.textBaseline='middle';ctx.fillText(lb.t,20,38);
+ const tex=new THREE.CanvasTexture(c);const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,depthTest:false,transparent:true}));sp.scale.set(w/72*0.75,0.75,1);sp.position.set(lb.x,lb.y,1.5);sp.renderOrder=10;return sp}
 let anchorMeshes=[],loadMeshes=[],goalMesh=null,grid=null,ghost,prevBeam;
 function clearGroup(g){while(g.children.length){const c=g.children.pop();c.traverse(o=>{if(o.geometry)o.geometry.dispose()})}}
 function buildWorld(){
@@ -361,6 +383,7 @@ function buildWorld(){
  // ghost marker + preview beam
  ghost=new THREE.Mesh(new THREE.SphereGeometry(0.2,12,10),new THREE.MeshBasicMaterial({color:0xf2b705}));ghost.visible=false;world.add(ghost);
  prevBeam=box(1,0.12,0.12,new THREE.MeshBasicMaterial({color:0xf2b705,transparent:true,opacity:0.8}),false);prevBeam.visible=false;world.add(prevBeam);
+ labelGrp=new THREE.Group();for(const lb of level.labels||[]){labelGrp.add(mkLabel(lb))}world.add(labelGrp);
  hookGroup=null;sig='';
 }
 
@@ -412,7 +435,8 @@ function syncScene(){
 }
 
 /* ---------- design editing ---------- */
-function newDesign(){return{nodes:level.anchors.map(a=>({x:a[0],y:a[1],fixed:true})),beams:[]}}
+function newDesign(){const d={nodes:level.anchors.map(a=>({x:a[0],y:a[1],fixed:true})),beams:[]};
+ if(level.starter){level.starter.nodes.forEach(n=>d.nodes.push({x:n[0],y:n[1],wheel:0}));level.starter.beams.forEach(b=>d.beams.push({a:b[0],b:b[1],type:b[2]}))}return d}
 function clone(d){return JSON.parse(JSON.stringify(d))}
 function pushHist(){S.hist.push(clone(design));if(S.hist.length>60)S.hist.shift()}
 function undo(){if(S.mode!=='build'||!S.hist.length)return;design=S.hist.pop();S.designs[S.li]=design;S.start=null;refreshHUD()}
@@ -502,11 +526,15 @@ function buildTabs(){const el=$('tabs');el.innerHTML='';LEVELS.forEach((l,i)=>{c
   const st=S.progress[i];if(st)b.innerHTML=(i+1)+'<span class="st">'+'★'.repeat(st)+'</span>';b.onclick=()=>loadLevel(i);el.appendChild(b)})}
 function refreshHUD(){
  const c=designCost(design);$('cv2').textContent=c.toLocaleString('fi-FI')+' / '+level.budget.toLocaleString('fi-FI')+' €';
- const bi=$('bar').firstElementChild;bi.style.width=Math.min(100,c/level.budget*100)+'%';bi.style.background=c>level.budget?'var(--bad)':'var(--good)'}
+ const bi=$('bar').firstElementChild;bi.style.width=Math.min(100,c/level.budget*100)+'%';bi.style.background=c>level.budget?'var(--bad)':'var(--good)';
+ const t2=Math.round(level.budget*level.stars[0]),t3=Math.round(level.budget*level.stars[1]);
+ $('t2').style.left=(level.stars[0]*100)+'%';$('t3').style.left=(level.stars[1]*100)+'%';
+ const now=c>level.budget?'ei testattavissa':c<=t3?'★★★':c<=t2?'★★':'★';
+ $('stars').innerHTML='★ läpäisy · ★★ alle '+t2.toLocaleString('fi-FI')+' € · ★★★ alle '+t3.toLocaleString('fi-FI')+' €<br>Nyt: <b style="color:var(--ink)">'+now+'</b> jos läpäiset';}
 function buildActions(){const el=$('actions');el.innerHTML='';
  const add=(t,cls,fn,hold)=>{const b=document.createElement('button');b.className='btn '+(cls||'');b.innerHTML=t;if(fn)b.onclick=fn;el.appendChild(b);return b};
  if(S.mode==='build'){
-  add('↶ Kumoa','',undo);add('Tyhjennä','',()=>{pushHist();design=newDesign();S.designs[S.li]=design;S.start=null;refreshHUD()});add('▶ Testaa','go',startTest)}
+  add('↶ Kumoa','',undo);add('Esimerkki','',loadExample);add('Tyhjennä','',()=>{pushHist();design=newDesign();S.designs[S.li]=design;S.start=null;refreshHUD()});add('▶ Testaa','go',startTest)}
  else{
   add('■ Muokkaa','',stopTest);add('↻ Uudelleen','',()=>startTest(true));
   const d=design,hasWheel=d.nodes.some(n=>n.wheel===2),hasWinch=d.beams.some(b=>b.type==='rope'&&(d.nodes[b.a].fixed||d.nodes[b.b].fixed)),hasPist=d.beams.some(b=>b.type==='piston'),hasRail=level.crane&&d.beams.some(b=>b.type==='rail');
@@ -531,8 +559,8 @@ function loadLevel(i){S.li=i;level=LEVELS[i];S.mode='build';S.sim=null;S.start=n
  design=S.designs[i]||(S.designs[i]=newDesign());
  if(!S.tool||!level.tools.includes(S.tool))S.tool=level.tools[0];
  buildWorld();buildTabs();buildTools();buildActions();refreshHUD();fitCam();S.follow=!!level.follow&&false;
- $('gt').textContent=level.title;$('gs').textContent=level.goal;$('banner').hidden=true;$('win').hidden=true;$('readout').hidden=true;grid.visible=true;
- $('ik').textContent='Haaste '+(i+1)+' / '+LEVELS.length;$('it').textContent=level.title;$('ib').textContent=level.brief;$('ih').textContent=level.hint;$('intro').hidden=false;
+ $('gt').textContent=level.title;$('gs').textContent=level.goal;$('banner').hidden=true;$('win').hidden=true;$('readout').hidden=true;grid.visible=true;labelGrp.visible=true;
+ $('ik').textContent='Haaste '+(i+1)+' / '+LEVELS.length;$('it').textContent=level.title;$('ib').textContent=level.brief;$('ih').textContent=level.hint;$('isteps').innerHTML=(level.steps||[]).map(t=>'<li>'+t+'</li>').join('');$('istar').textContent='Tähdet: ★ läpäisy, ★★ alle '+Math.round(level.budget*level.stars[0]).toLocaleString('fi-FI')+' €, ★★★ alle '+Math.round(level.budget*level.stars[1]).toLocaleString('fi-FI')+' €.';$('intro').hidden=false;
  camBtns()}
 function startTest(again){
  cleanup();
@@ -542,9 +570,9 @@ function startTest(again){
  if(level.crane&&design.beams.some(b=>b.type==='rail')===false&&S.li===2){toast('Tarvitset nosturikiskon (työkalu Nosturikisko)');return}
  if(S.li===3&&!design.nodes.some(n=>n.wheel===2)){toast('Tarvitset ainakin yhden moottoripyörän');return}
  S.mode='test';S.start=null;S.sim=new Sim(level,clone(design));S.done=false;S.acc=0;$('banner').hidden=true;$('win').hidden=true;
- grid.visible=false;ghost.visible=false;prevBeam.visible=false;sig='';buildActions();$('readout').hidden=false;
+ grid.visible=false;labelGrp.visible=false;ghost.visible=false;prevBeam.visible=false;sig='';buildActions();$('readout').hidden=false;
  if(level.follow){S.follow=true}camBtns()}
-function stopTest(){S.mode='build';S.sim=null;S.follow=false;grid.visible=true;sig='';buildActions();$('banner').hidden=true;$('readout').hidden=true;$('win').hidden=true;fitCam();camBtns()}
+function stopTest(){S.mode='build';S.sim=null;S.follow=false;grid.visible=true;labelGrp.visible=true;sig='';buildActions();$('banner').hidden=true;$('readout').hidden=true;$('win').hidden=true;fitCam();camBtns()}
 function finish(r){
  if(S.done)return;S.done=true;
  if(r.win){const c=designCost(design),ratio=c/level.budget;const st=ratio<=level.stars[1]?3:ratio<=level.stars[0]?2:1;
@@ -554,6 +582,9 @@ function finish(r){
   $('wnext').style.display=S.li<LEVELS.length-1?'':'none';$('win').hidden=false}
  else{$('bmsg').textContent=r.fail;$('banner').hidden=false}}
 function camBtns(){$('cFollow').classList.toggle('on',S.follow)}
+function loadExample(){if(S.mode!=='build')return;pushHist();design=clone(EXAMPLES[S.li]);S.designs[S.li]=design;S.start=null;sig='';refreshHUD();toast('Esimerkki ladattu. Kokeile parantaa sitä!')}
+$('iex').onclick=()=>{$('intro').hidden=true;loadExample()};
+$('helpBtn').onclick=()=>{$('help').hidden=false};$('hclose').onclick=()=>{$('help').hidden=true};
 $('istart').onclick=()=>{$('intro').hidden=true};
 $('wback').onclick=stopTest;$('wnext').onclick=()=>loadLevel(S.li+1);$('bback').onclick=stopTest;$('bretry').onclick=()=>startTest(true);
 $('cSide').onclick=()=>{C.az=0;C.el=0.03;camBtns()};$('c3d').onclick=()=>{C.az=0.75;C.el=0.35};
